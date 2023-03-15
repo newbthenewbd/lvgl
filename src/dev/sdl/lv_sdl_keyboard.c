@@ -80,8 +80,17 @@ static void sdl_keyboard_read(lv_indev_t * indev, lv_indev_data_t * data)
     else if(len > 0) {
         dev->dummy_read = true;
         data->state = LV_INDEV_STATE_PRESSED;
-        data->key = dev->buf[0];
-        memmove(dev->buf, dev->buf + 1, len);
+        
+        const char lengths[] = {
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0
+        };
+        uint32_t next = lengths[((unsigned char) dev->buf[0]) >> 3];
+        next += !next;
+        
+        data->key = (*((uint32_t*) dev->buf) << ((4-next)*8) >> ((4-next)*8));
+        memmove(dev->buf, dev->buf + next, len - next + 1);
+        
         data->continue_reading = true;
     }
 }

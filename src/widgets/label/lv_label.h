@@ -193,6 +193,15 @@ void lv_label_get_letter_pos(const lv_obj_t * obj, uint32_t char_id, lv_point_t 
 uint32_t lv_label_get_letter_on(const lv_obj_t * obj, lv_point_t * pos_in);
 
 /**
+ * Get the index of the nearest cursor position between two letters on a relative point of a label.
+ * @param obj       pointer to label object
+ * @param pos       pointer to point with coordinates on a the label
+ * @return          The index of the cursor position nearest to the 'pos_p' point (E.g. 1 for 7;0 if the 0. letter is at 0;0 and 10px wide)
+ *                  Expressed in character index and not byte index (different in UTF-8)
+ */
+uint32_t lv_label_get_cursor_on(const lv_obj_t * obj, lv_point_t * pos_in);
+
+/**
  * Check if a character is drawn under a point.
  * @param obj       pointer to a label object
  * @param pos       Point to check for character under

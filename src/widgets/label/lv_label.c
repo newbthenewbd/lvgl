@@ -489,6 +489,120 @@ uint32_t lv_label_get_letter_on(const lv_obj_t * obj, lv_point_t * pos_in)
     return  logical_pos + _lv_txt_encoded_get_char_id(txt, line_start);
 }
 
+uint32_t lv_label_get_cursor_on(const lv_obj_t * obj, lv_point_t * pos_in)
+{
+    LV_ASSERT_OBJ(obj, MY_CLASS);
+    LV_ASSERT_NULL(pos_in);
+    lv_label_t * label = (lv_label_t *)obj;
+
+    lv_point_t pos;
+    pos.x = pos_in->x - lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
+    pos.y = pos_in->y - lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
+
+    lv_area_t txt_coords;
+    lv_obj_get_content_coords(obj, &txt_coords);
+    const char * txt         = lv_label_get_text(obj);
+    uint32_t line_start      = 0;
+    uint32_t new_line_start  = 0;
+    lv_coord_t max_w         = lv_area_get_width(&txt_coords);
+    const lv_font_t * font   = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+    const lv_coord_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
+    const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
+    const lv_coord_t letter_height = lv_font_get_line_height(font);
+    lv_coord_t y = 0;
+
+    lv_text_flag_t flag = get_label_flags(label);
+    if(lv_obj_get_style_width(obj, LV_PART_MAIN) == LV_SIZE_CONTENT && !obj->w_layout) flag |= LV_TEXT_FLAG_FIT;
+
+    /*Search the line of the index letter*/;
+    while(txt[line_start] != '\0') {
+        new_line_start += _lv_txt_get_next_line(&txt[line_start], font, letter_space, max_w, NULL, flag);
+
+        if(pos.y <= y + letter_height) {
+            /*The line is found (stored in 'line_start')*/
+            /*Include the NULL terminator in the last line*/
+            uint32_t tmp = new_line_start;
+            uint32_t letter;
+            letter = _lv_txt_encoded_prev(txt, &tmp);
+            if(letter != '\n' && txt[new_line_start] == '\0') new_line_start++;
+            break;
+        }
+        y += letter_height + line_space;
+
+        line_start = new_line_start;
+    }
+
+    char * bidi_txt;
+
+#if LV_USE_BIDI
+    bidi_txt = lv_malloc(new_line_start - line_start + 1);
+    uint32_t txt_len = new_line_start - line_start;
+    if(new_line_start > 0 && txt[new_line_start - 1] == '\0' && txt_len > 0) txt_len--;
+    _lv_bidi_process_paragraph(txt + line_start, bidi_txt, txt_len, lv_obj_get_style_base_dir(obj, LV_PART_MAIN), NULL, 0);
+#else
+    bidi_txt = (char *)txt + line_start;
+#endif
+
+    /*Calculate the x coordinate*/
+    lv_coord_t x = 0;
+    const lv_text_align_t align = lv_obj_calculate_style_text_align(obj, LV_PART_MAIN, label->text);
+    uint32_t length = new_line_start - line_start;
+    calculate_x_coordinate(&x, align, bidi_txt, length, font, letter_space, flag, &txt_coords);
+
+    lv_text_cmd_state_t cmd_state = LV_TEXT_CMD_STATE_WAIT;
+
+    uint32_t i = 0;
+    uint32_t i_act = i;
+
+    if(new_line_start > 0) {
+        while(i + line_start < new_line_start) {
+            /*Get the current letter and the next letter for kerning*/
+            /*Be careful 'i' already points to the next character*/
+            uint32_t letter;
+            uint32_t letter_next;
+            _lv_txt_encoded_letter_next_2(bidi_txt, &letter, &letter_next, &i);
+
+            /*Handle the recolor command*/
+            if((flag & LV_TEXT_FLAG_RECOLOR) != 0) {
+                if(_lv_txt_is_cmd(&cmd_state, bidi_txt[i]) != false) {
+                    continue; /*Skip the letter if it is part of a command*/
+                }
+            }
+
+            lv_coord_t gw = lv_font_get_glyph_width(font, letter, letter_next);
+
+            /*Finish if the x position or the last char of the next line is reached*/
+            if(pos.x + (-gw >> 1) < x || i + line_start == new_line_start ||  txt[i_act + line_start] == '\0') {
+                i = i_act;
+                break;
+            }
+            x += gw;
+            x += letter_space;
+            i_act = i;
+        }
+    }
+
+    uint32_t logical_pos;
+#if LV_USE_BIDI
+    /*Handle Bidi*/
+    uint32_t cid = _lv_txt_encoded_get_char_id(bidi_txt, i);
+    if(txt[line_start + i] == '\0') {
+        logical_pos = i;
+    }
+    else {
+        bool is_rtl;
+        logical_pos = _lv_bidi_get_logical_pos(&txt[line_start], NULL,
+                                               txt_len, lv_obj_get_style_base_dir(obj, LV_PART_MAIN), cid, &is_rtl);
+        if(is_rtl) logical_pos++;
+    }
+    lv_free(bidi_txt);
+#else
+    logical_pos = _lv_txt_encoded_get_char_id(bidi_txt, i);
+#endif
+
+    return  logical_pos + _lv_txt_encoded_get_char_id(txt, line_start);
+}
+
 bool lv_label_is_char_under_pos(const lv_obj_t * obj, lv_point_t * pos)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);

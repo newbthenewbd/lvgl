@@ -896,6 +896,8 @@ static void lv_textarea_event(const lv_obj_class_t * class_p, lv_event_t * e)
             lv_textarea_cursor_up(obj);
         else if(c == LV_KEY_DOWN)
             lv_textarea_cursor_down(obj);
+        else if(c == LV_KEY_ESC)
+            (void) c; /*TODO unfocus*/
         else if(c == LV_KEY_BACKSPACE)
             lv_textarea_del_char(obj);
         else if(c == LV_KEY_DEL)

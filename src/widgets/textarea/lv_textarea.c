@@ -1089,27 +1089,6 @@ static void refr_cursor_area(lv_obj_t * obj)
     lv_point_t letter_pos;
     lv_label_get_letter_pos(ta->label, cur_pos, &letter_pos);
 
-    lv_text_align_t align = lv_obj_calculate_style_text_align(ta->label, LV_PART_MAIN, lv_label_get_text(ta->label));
-
-    /*If the cursor is out of the text (most right) draw it to the next line*/
-    if(((letter_pos.x + ta->label->coords.x1) + letter_w > ta->label->coords.x2) &&
-       (ta->one_line == 0 && align != LV_TEXT_ALIGN_RIGHT)) {
-
-        letter_pos.x = 0;
-        letter_pos.y += letter_h + line_space;
-
-        if(letter != '\0') {
-            byte_pos += _lv_txt_encoded_size(&txt[byte_pos]);
-            letter = _lv_txt_encoded_next(&txt[byte_pos], NULL);
-        }
-
-        uint32_t tmp = letter;
-        if(is_valid_but_non_printable_char(letter)) {
-            tmp = ' ';
-        }
-        letter_w = lv_font_get_glyph_width(font, tmp, IGNORE_KERNING);
-    }
-
     /*Save the byte position. It is required to draw `LV_CURSOR_BLOCK`*/
     ta->cursor.txt_byte_pos = byte_pos;
 

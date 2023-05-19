@@ -84,6 +84,9 @@ typedef enum {
     LV_SCR_LOAD_ANIM_OUT_BOTTOM,
 } lv_scr_load_anim_t;
 
+
+typedef void (*lv_disp_flush_cb_t)(struct _lv_disp_t * disp, const lv_area_t * area, lv_color_t * px_map);
+
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
@@ -247,8 +250,7 @@ void lv_disp_set_draw_buffers(lv_disp_t * disp, void * buf1, void * buf2, uint32
  * @param disp      pointer to a display
  * @param flush_cb  the flush callback (`px_map` contains the rendered image as raw pixel map and it should be copied to `area` on the display)
  */
-void lv_disp_set_flush_cb(lv_disp_t * disp, void (*flush_cb)(struct _lv_disp_t * disp, const lv_area_t * area,
-                                                             lv_color_t * px_map));
+void lv_disp_set_flush_cb(lv_disp_t * disp, lv_disp_flush_cb_t flush_cb);
 /**
  * Set the color format of the display.
  * If set to other than `LV_COLOR_FORMAT_NATIVE` the draw_ctx's `buffer_convert` function will be used
@@ -564,7 +566,7 @@ static inline lv_coord_t lv_dpx(lv_coord_t n)
  * considering the DPI of the given display.
  * It ensures that e.g. `lv_dpx(100)` will have the same physical size regardless to the
  * DPI of the display.
- * @param obj   a display whose dpi should be considered
+ * @param disp   a display whose dpi should be considered
  * @param n     the number of pixels to scale
  * @return      `n x current_dpi/160`
  */

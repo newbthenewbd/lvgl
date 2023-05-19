@@ -17,6 +17,7 @@ extern "C" {
 
 #include "../misc/lv_style.h"
 #include "../misc/lv_txt.h"
+#include "../misc/lv_profiler.h"
 #include "lv_img_decoder.h"
 #include "lv_img_cache.h"
 
@@ -71,6 +72,9 @@ typedef struct _lv_draw_ctx_t  {
      * The current clip area with absolute coordinates, always the same or smaller than `buf_area`
      */
     const lv_area_t * clip_area;
+
+    /** The original area which is updated*/
+    lv_area_t clip_area_original;
 
     /**
      * The rendered image in draw_ctx->buf will be converted to this format

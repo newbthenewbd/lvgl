@@ -140,7 +140,7 @@
     #endif
 #endif  /*LV_USE_BUILTIN_MALLOC*/
 
-/*Enable lv_memcpy_builtin, lv_memset_builtin, lv_strlen_builtin, lv_strncpy_builtin*/
+/*Enable lv_memcpy_builtin, lv_memset_builtin, lv_strlen_builtin, lv_strncpy_builtin, lv_strcpy_builtin*/
 #ifndef LV_USE_BUILTIN_MEMCPY
     #ifdef _LV_KCONFIG_PRESENT
         #ifdef CONFIG_LV_USE_BUILTIN_MEMCPY
@@ -257,6 +257,13 @@
         #define LV_STRNCPY CONFIG_LV_STRNCPY
     #else
         #define LV_STRNCPY      lv_strncpy_builtin
+    #endif
+#endif
+#ifndef LV_STRCPY
+    #ifdef CONFIG_LV_STRCPY
+        #define LV_STRCPY CONFIG_LV_STRCPY
+    #else
+        #define LV_STRCPY       lv_strcpy_builtin
     #endif
 #endif
 
@@ -849,7 +856,8 @@
  * Others
  *-----------*/
 
-/*1: Show CPU usage and FPS count*/
+/*1: Show CPU usage and FPS count
+ * Requires `LV_USE_SYSMON = 1`*/
 #ifndef LV_USE_PERF_MONITOR
     #ifdef CONFIG_LV_USE_PERF_MONITOR
         #define LV_USE_PERF_MONITOR CONFIG_LV_USE_PERF_MONITOR
@@ -865,10 +873,20 @@
             #define LV_USE_PERF_MONITOR_POS LV_ALIGN_BOTTOM_RIGHT
         #endif
     #endif
+
+    /*0: Displays performance data on the screen, 1: Prints performance data using log.*/
+    #ifndef LV_USE_PERF_MONITOR_LOG_MODE
+        #ifdef CONFIG_LV_USE_PERF_MONITOR_LOG_MODE
+            #define LV_USE_PERF_MONITOR_LOG_MODE CONFIG_LV_USE_PERF_MONITOR_LOG_MODE
+        #else
+            #define LV_USE_PERF_MONITOR_LOG_MODE 0
+        #endif
+    #endif
 #endif
 
 /*1: Show the used memory and the memory fragmentation
- * Requires `LV_USE_BUILTIN_MALLOC = 1`*/
+ * Requires `LV_USE_BUILTIN_MALLOC = 1`
+ * Requires `LV_USE_SYSMON = 1`*/
 #ifndef LV_USE_MEM_MONITOR
     #ifdef CONFIG_LV_USE_MEM_MONITOR
         #define LV_USE_MEM_MONITOR CONFIG_LV_USE_MEM_MONITOR
@@ -2316,6 +2334,52 @@
         #define LV_USE_SNAPSHOT CONFIG_LV_USE_SNAPSHOT
     #else
         #define LV_USE_SNAPSHOT 0
+    #endif
+#endif
+
+/*1: Enable system monitor component*/
+#ifndef LV_USE_SYSMON
+    #ifdef CONFIG_LV_USE_SYSMON
+        #define LV_USE_SYSMON CONFIG_LV_USE_SYSMON
+    #else
+        #define LV_USE_SYSMON 0
+    #endif
+#endif
+
+/*1: Enable the runtime performance profiler*/
+#ifndef LV_USE_PROFILER
+    #ifdef CONFIG_LV_USE_PROFILER
+        #define LV_USE_PROFILER CONFIG_LV_USE_PROFILER
+    #else
+        #define LV_USE_PROFILER 0
+    #endif
+#endif
+#if LV_USE_PROFILER
+    /*Header to include for the profiler*/
+    #ifndef LV_PROFILER_INCLUDE
+        #ifdef CONFIG_LV_PROFILER_INCLUDE
+            #define LV_PROFILER_INCLUDE CONFIG_LV_PROFILER_INCLUDE
+        #else
+            #define LV_PROFILER_INCLUDE <stdint.h>
+        #endif
+    #endif
+
+    /*Profiler start point function*/
+    #ifndef LV_PROFILER_BEGIN
+        #ifdef CONFIG_LV_PROFILER_BEGIN
+            #define LV_PROFILER_BEGIN CONFIG_LV_PROFILER_BEGIN
+        #else
+            #define LV_PROFILER_BEGIN
+        #endif
+    #endif
+
+    /*Profiler end point function*/
+    #ifndef LV_PROFILER_END
+        #ifdef CONFIG_LV_PROFILER_END
+            #define LV_PROFILER_END CONFIG_LV_PROFILER_END
+        #else
+            #define LV_PROFILER_END
+        #endif
     #endif
 #endif
 
